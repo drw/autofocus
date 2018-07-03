@@ -1,10 +1,21 @@
 import sys, re, json, requests
 from datetime import datetime, timedelta
 import tweepy
+import fire
 from pprint import pprint
 
 from settings import TWITTER_KEYS, threshold, retweet_threshold, censor
 
+def connect_to_twitter():
+    consumer_key = TWITTER_KEYS['consumer_key']
+    consumer_secret = TWITTER_KEYS['consumer_secret']
+    access_token_key = TWITTER_KEYS['access_token_key']
+    access_token_secret = TWITTER_KEYS['access_token_secret']
+
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token_key, access_token_secret)
+    api = tweepy.API(auth)
+    return api
 
 def elevate(tweet):
     username = tweet.user.screen_name
@@ -24,23 +35,32 @@ def elevate(tweet):
 
     return True
 
+def list(username=None):
+    api = connect_to_twitter()
+    if username == None:
+        me = api.me()
+        username = me.screen_name
+
+    following_ids = api.friends_ids(id=username)
+    following = [api.get_user(id=i).screen_name for i in following_ids]
+    pprint(following)
+
+def follow(username):
+    api = connect_to_twitter()
+    user = api.create_friendship(id=username,follow=True) # This method returns a user object
+
+def unfollow(username):
+    api = connect_to_twitter()
+    user = api.destroy_friendship(id=username) # This method returns a user object
+
 def main(*args,**kwargs):
-
     target_user = kwargs.get('target_user',None)
-    consumer_key = TWITTER_KEYS['consumer_key']
-    consumer_secret = TWITTER_KEYS['consumer_secret']
-    access_token_key = TWITTER_KEYS['access_token_key']
-    access_token_secret = TWITTER_KEYS['access_token_secret']
-
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token_key, access_token_secret)
-
-    api = tweepy.API(auth)
+    api = connect_to_twitter()
 
     if target_user is None:
         tweets = api.home_timeline(count = 40, tweet_mode = 'extended') # public tweets
     else:
-        tweets = api.user_timeline(id = target_user, count = 40, tweet_mode = 'extended')
+        tweets = api.user_timeline(id = target_user, count = 100, tweet_mode = 'extended')
 
     blocked_count = 0
     for tweet in tweets:
@@ -62,8 +82,13 @@ def main(*args,**kwargs):
 
 # sys.argv[1] specifies user to focus on
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        target_user = sys.argv[1]
-        main(target_user = target_user)
-    else:
+    if len(sys.argv) == 1:
         main()
+    elif len(sys.argv) == 2:
+        if sys.argv[1] in ['list','following']:
+            list()
+        else:
+            target_user = sys.argv[1]
+            main(target_user = target_user)
+    else:
+        fire.Fire()
