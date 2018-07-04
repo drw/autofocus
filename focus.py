@@ -53,12 +53,12 @@ def unfollow(username):
     api = connect_to_twitter()
     user = api.destroy_friendship(id=username) # This method returns a user object
 
-def main(*args,**kwargs):
+def posts(*args,**kwargs):
     target_user = kwargs.get('target_user',None)
     api = connect_to_twitter()
 
     if target_user is None:
-        tweets = api.home_timeline(count = 40, tweet_mode = 'extended') # public tweets
+        tweets = api.home_timeline(count = 100, tweet_mode = 'extended') # public tweets
     else:
         tweets = api.user_timeline(id = target_user, count = 100, tweet_mode = 'extended')
 
@@ -74,7 +74,6 @@ def main(*args,**kwargs):
         else:
             blocked_count += 1
 
-    print(dir(tweets[0]))
     print("Blocked {} of {} posts.".format(blocked_count, len(tweets)))
     # api.update_status( msg) 
 
@@ -83,12 +82,12 @@ def main(*args,**kwargs):
 # sys.argv[1] specifies user to focus on
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        main()
+        posts()
     elif len(sys.argv) == 2:
         if sys.argv[1] in ['list','following']:
             list()
         else:
             target_user = sys.argv[1]
-            main(target_user = target_user)
+            posts(target_user = target_user)
     else:
         fire.Fire()
