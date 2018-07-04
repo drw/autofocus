@@ -66,11 +66,6 @@ def posts(*args,**kwargs):
     for tweet in tweets:
         if elevate(tweet):
             print("{} - {} [{}/{}]: {}".format(tweet.user.screen_name,tweet.created_at,tweet.favorite_count,tweet.retweet_count,tweet.full_text))
-            #if tweet.user.screen_name == 'a_baronca':
-            #    for k in dir(tweet):
-            #        if k[0] != '_' and k not in ['retweets']:
-            #            print(k)
-            #            pprint(getattr(tweet,k))
         else:
             blocked_count += 1
 
@@ -80,6 +75,10 @@ def posts(*args,**kwargs):
     # tweet.entities.hashtags should be a list of tags
 
 # sys.argv[1] specifies user to focus on
+# > python3 focus.py <username> # pulls the last N posts for @username (even if not 
+# following that user), allowing rapid iteration and design of the filter parameters
+# for that user.
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         posts()
